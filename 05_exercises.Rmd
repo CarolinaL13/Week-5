@@ -12,7 +12,7 @@ output:
 
 
 ```{r setup, include=FALSE}
-#knitr::opts_chunk$set(echo = TRUE, error=TRUE, message=FALSE, warning=FALSE)
+knitr::opts_chunk$set(echo = TRUE, error=TRUE, message=FALSE, warning=FALSE)
 ```
 
 ```{r libraries}
@@ -193,6 +193,8 @@ knitr::include_graphics("TomatoVarities.gif")
   * Show the time in the subtitle.  
   * CHALLENGE: use the `ggimage` package and `geom_image` to add a bike image instead of a red point. You can use [this](https://raw.githubusercontent.com/llendway/animation_and_interactivity/master/bike.png) image. See [here](https://goodekat.github.io/presentations/2019-isugg-gganimate-spooky/slides.html#35) for an example. 
   * Add something of your own! And comment on if you prefer this to the static map and why or why not.
+  
+  **I like this better than the static map because it makes sense to add movement when the data is about a person covering distance in a sporting event. It's much more insightful to see when they stop one activitie and start another instead of seeing dots on a path.**
 ```{r}
 Mallorca <- get_stamenmap(
     bbox = c(left = 2.25, bottom = 39.45, right = 3, top = 39.75),
@@ -326,7 +328,7 @@ Covid10000_gganim<- covid19 %>%
   mutate(cases_per_10000 = (cumsum(cases)/est_pop_2018) * 10000) %>% 
   mutate(weekday = wday(date, label = TRUE)) %>% 
   filter(weekday == "Fri") %>% 
-  ggplot()+
+  ggplot(aes(group = date))+
   geom_map(map = USmap,
            aes(map_id = state_name,
            fill = cases_per_10000))+
@@ -334,17 +336,13 @@ Covid10000_gganim<- covid19 %>%
                 y = USmap$lat)+
   scale_fill_gradient(high = '#660066', low = '#FF0000')+
   theme_map()+
-  labs(title = "COVID Cases per State")+
+  labs(title = "COVID Cases per State",
+       subtitle = "Date : {frame_along}")+
   transition_reveal(date)
 
-animate(Covid10000_gganim)
-
-
-
-
-
-
+animate(Covid10000_gganim, nframes = 200, end_pause = 10)
 ```
+
 ```{r, eval = FALSE, echo = FALSE}
 anim_save("CovidPer10000.gif")
 ```
