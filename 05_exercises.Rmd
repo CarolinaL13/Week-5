@@ -269,30 +269,36 @@ knitr::include_graphics("PanamaIronman.gif")
   * Comment on what you observe.
   
 ```{r}
-Covid19ByState_gganim <- covid19 %>% 
+Covid19ByState_gganim<- covid19 %>% 
   group_by(state) %>% 
   mutate(new_cases = lag(cases),
          cum_covid_cases = cumsum(cases)) %>% 
   mutate(new_cases = replace_na(new_cases, 0)) %>% 
   filter(cum_covid_cases >= 20) %>% 
-  ggplot(aes(x = cum_covid_cases, y = new_cases, group = state))+
-  geom_path()+
-  geom_point()+
+  ggplot(aes(x= cum_covid_cases, y = new_cases, group = state))+
+  geom_path(color = "#66FF33")+
+  geom_point(color = "#66FF33")+
   geom_text(aes(label = state), check_overlap = TRUE)+
   scale_x_log10(labels = scales::comma)+
   scale_y_log10(labels = scales::comma)+
-  
+  labs(title = "Covid Cases (Total vs. New)",
+       subtitle = "Date : {frame_along}",
+       y = "new cases",
+       x = "total cases")+
   transition_reveal(date)
   
-animate(Covid19ByState_gganim, duration = 30, frame(200))
-  
+animate(Covid19ByState_gganim, nframes = 200)
   
 ```
   
-```{r}
+```{r, eval = FALSE, echo = FALSE}
+anim_save("TotalVsNew.gif")
+```
+  
+```{r, echo = FALSE}
+knitr::include_graphics("TotalVsNew.gif")
+```
 
-```
-  
   7. In this exercise you will animate a map of the US, showing how cumulative COVID-19 cases per 10,000 residents has changed over time. This is similar to exercises 11 & 12 from the previous exercises, with the added animation! So, in the end, you should have something like the static map you made there, but animated over all the days. The code below gives the population estimates for each state and loads the `states_map` data. Here is a list of details you should include in the plot:
   
   * Put date in the subtitle.   
@@ -309,6 +315,42 @@ census_pop_est_2018 <- read_csv("https://www.dropbox.com/s/6txwv3b4ng7pepe/us_ce
   mutate(state = str_to_lower(state))
 
 states_map <- map_data("state")
+```
+```{r}
+USmap <- map_data("state")
+
+Covid10000_gganim<- covid19 %>% 
+  mutate(state_name = str_to_lower(state)) %>% 
+  group_by(state) %>% 
+  left_join(census_pop_est_2018, by = c("state_name" = "state")) %>% 
+  mutate(cases_per_10000 = (cumsum(cases)/est_pop_2018) * 10000) %>% 
+  mutate(weekday = wday(date, label = TRUE)) %>% 
+  filter(weekday == "Fri") %>% 
+  ggplot()+
+  geom_map(map = USmap,
+           aes(map_id = state_name,
+           fill = cases_per_10000))+
+  expand_limits(x = USmap$long,
+                y = USmap$lat)+
+  scale_fill_gradient(high = '#660066', low = '#FF0000')+
+  theme_map()+
+  labs(title = "COVID Cases per State")+
+  transition_reveal(date)
+
+animate(Covid10000_gganim)
+
+
+
+
+
+
+```
+```{r, eval = FALSE, echo = FALSE}
+anim_save("CovidPer10000.gif")
+```
+
+```{r}
+knitr::include_graphics("CovidPer10000.gif")
 ```
 
 ## Your first `shiny` app (for next week!)
